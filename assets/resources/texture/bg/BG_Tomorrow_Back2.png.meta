@@ -1,0 +1,30 @@
+{
+  "ver": "1.0.0",
+  "uuid": "d718985e-0f96-4a4b-b90e-0e5fa839ca9a",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "subMetas": {
+    "BG_Tomorrow_Back2": {
+      "ver": "1.0.3",
+      "uuid": "dd63f681-446f-4776-be9d-80a7e9c398ce",
+      "rawTextureUuid": "d718985e-0f96-4a4b-b90e-0e5fa839ca9a",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 0,
+      "offsetY": 0,
+      "trimX": 0,
+      "trimY": 0,
+      "width": 768,
+      "height": 1024,
+      "rawWidth": 768,
+      "rawHeight": 1024,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}

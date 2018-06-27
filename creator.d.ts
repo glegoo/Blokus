@@ -1474,7 +1474,7 @@ declare module cc {
 	
 	``` 
 	*/
-	export function lerp(a: number, b: number, r: number): void;	
+	export function lerp(a: number, b: number, r: number): number;	
 	/**
 	get a random number from 0 to 0xffffff 
 	*/
@@ -13168,7 +13168,7 @@ declare module cc {
 		v.divSelf(5); // return Vec2 {x: 2, y: 2};
 		``` 
 		*/
-		divSelf(vector: Vec2): Vec2;		
+		divSelf(num: number): Vec2;		
 		/**
 		!#en Divides by a number, and returns the new result.
 		!#zh 向量除法，并返回新的结果。
@@ -13183,7 +13183,7 @@ declare module cc {
 		v.div(5, v1);  // return Vec2 {x: 2, y: 2};
 		``` 
 		*/
-		div(vector: Vec2, out?: Vec2): Vec2;		
+		div(num: number, out?: Vec2): Vec2;		
 		/**
 		!#en Negates the components. If you want to save result to another vector, use neg() instead.
 		!#zh 向量取反。如果你想结果保存到另一个向量，可使用 neg() 代替。
