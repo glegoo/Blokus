@@ -12,8 +12,9 @@
             "trace": true,
             "pathMapping": {
                 "/preview-scripts/assets": "${workspaceRoot}/temp/quick-scripts/assets",
-                "/": "${workspaceRoot}"
-            }    
+                "/": "${workspaceRoot}",
+                "/app":"D:/CocosCreator/resources"
+            }
         }
     ]
 }

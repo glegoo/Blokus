@@ -1,16 +1,16 @@
-import { BlockType, GameDefine } from "./GameDefine";
+import { GameDefine, BlockCheckResult } from "./GameDefine";
 
 export class Grid {
 
     private static _size: number = 0;
-    private _grid: Array<BlockType> = null;
+    private _grid: Array<number> = null;
 
     constructor(size: number) {
         Grid._size = size;
         this._grid = new Array(size * size);
     }
 
-    getBlock(x: number, y: number): BlockType {
+    getBlock(x: number, y: number): number {
         let index = x + y * Grid._size;
         if (index < Math.pow(Grid._size, 2)) {
             return this._grid[index];
@@ -18,11 +18,38 @@ export class Grid {
         return null;
     }
 
-    setBlock(x: number, y: number, type: BlockType) {
+    setBlock(x: number, y: number, type: number) {
         let index = x + y * Grid._size;
         if (index < Math.pow(Grid._size, 2)) {
             this._grid[index] = type;
         }
+    }
+
+    blockCheck(coord: cc.Vec2, seat: number): BlockCheckResult {
+        let jiao = false;
+        for (let i = -1; i <= 1; ++i) {
+            for (let j = -1; j <= 1; ++j) {
+                if (i === 0 && j === 0) {
+                    continue;
+                }
+                // 被占了
+                if (this.getBlock(coord.x, coord.y) !== undefined) {
+                    return BlockCheckResult.NotEmpty;
+                }
+                
+                let x = coord.x + i, y = coord.y + j;
+                if (this.getBlock(x, y) == seat) {
+                    if (i * j === 0) {
+                        // 边了
+                        return BlockCheckResult.Edge;
+                    } else {
+                        // 角了
+                        jiao = true;
+                    }
+                }
+            }
+        }
+        return jiao ? BlockCheckResult.Conner : BlockCheckResult.OK;
     }
 
     static getPosition(x: number, y: number): cc.Vec2 {

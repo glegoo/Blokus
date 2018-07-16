@@ -1,7 +1,7 @@
 import { GameDefine } from "../GameDefine";
 import { Grid } from "../Grid";
 import { Utils } from "../Utils";
-import GameCtrl from "./GameCtrl";
+import { GameClient } from "../GameClient";
 
 const { ccclass, property } = cc._decorator;
 
@@ -14,27 +14,20 @@ export default class Piece extends cc.Component {
 
     // 离开plate时的位置
     lastPlateIndex: number = 0;
+    onDrag: boolean = false;
 
     private _moveable: boolean = false;
-    private _onDrag: boolean = false;
     private _shadow: cc.Node = null;
     private _touchTiming: number = 0;
+    private _board: cc.Node = null;
 
-    private get _inBoard() {
+    get inBoard() {
         return this.node.parent.name === "board";
     }
 
-    get onDrag() {
-        return this._onDrag;
-    }
-
     onLoad() {
-        this._shadow = cc.instantiate(this.node);
-        this._shadow.getComponent(Piece).enabled = false;
-        this._shadow.setScale(1);
-        this._shadow.active = false;
-        this._shadow.parent = GameCtrl.instance.board.node;
-        this._shadow.opacity = 155;
+        this._board = cc.find('Canvas/board')
+        this.createShadow();
     }
 
     start() {
@@ -46,10 +39,10 @@ export default class Piece extends cc.Component {
         let self = this;
         //break if it's not my turn.
         this.node.on(cc.Node.EventType.TOUCH_START, function (touch: cc.Touch) {
-            console.log("cc.Node.EventType.TOUCH_START", self.name, self.node.getContentSize());
+            // console.log("cc.Node.EventType.TOUCH_START", self.name, self.node.getContentSize());
             if (self._moveable) {
                 // 棋盘中直接可以移动
-                if (self._inBoard) {
+                if (self.inBoard) {
                     self.onTouchStart(touch);
                 }
                 else {
@@ -74,7 +67,7 @@ export default class Piece extends cc.Component {
         });
 
         this.node.on(cc.Node.EventType.TOUCH_END, function (touch: cc.Touch) {
-            console.log("cc.Node.EventType.TOUCH_END", self.name, self.node.getContentSize());
+            // console.log("cc.Node.EventType.TOUCH_END", self.name, self.node.getContentSize());
             if (self._moveable) {
                 if (self.onDrag) {
                     self.onTouchEnd(touch);
@@ -84,11 +77,10 @@ export default class Piece extends cc.Component {
         });
 
         this.node.on(cc.Node.EventType.TOUCH_CANCEL, function (touch: cc.Touch) {
-            console.log("cc.Node.EventType.MOUSE_LEAVE", self.name, self.node.getContentSize());
+            // console.log("cc.Node.EventType.MOUSE_LEAVE", self.name, self.node.getContentSize());
             if (self._moveable) {
                 if (self.onDrag) {
                     self.onTouchEnd(touch);
-                    GameCtrl.instance.plate.onPieceDroped(self);
                 }
                 self._touchTiming = 0;
             }
@@ -96,15 +88,17 @@ export default class Piece extends cc.Component {
     }
 
     onTouchStart(touch: cc.Touch) {
-        console.log("piece touch start")
-        if (!this._inBoard) {
+        // console.log("piece touch start")
+        if (!this.inBoard) {
+            // 放大动画
             let action: cc.ActionInterval = cc.scaleBy(0.1, GameDefine.ZOOM_SCALE);
             this.node.runAction(action)
-            let sv = this.node.parent.parent.parent.getComponent(cc.ScrollView);
-            sv.enabled = false;
-            GameCtrl.instance.plate.onPiecePicked(this);
         }
-        this._onDrag = true;
+        else {
+            this.showShadow(true);
+        }
+        this.onDrag = true;
+        GameClient.boardcastEvent('on_piece_picked', this);
     }
 
     onMove(touch: cc.Touch) {
@@ -114,70 +108,88 @@ export default class Piece extends cc.Component {
         this.node.x = pos.x;
         this.node.y = pos.y;
 
-        // console.log(touch.getLocation(), pos, parent.convertTouchToNodeSpaceAR(touch))
+        // 判断piece位置在plate还是board
         if (touch.getLocationY() > 260) {
-            if (!this._inBoard) {
-                this.enterBoard();
+            if (!this.inBoard) {
+                this.plateToBoard();
             }
             this.updateShadow();
         }
         else {
-            if (this._inBoard) {
-                this.enterPlate();
+            if (this.inBoard) {
+                this.boardToPlate();
             }
         }
-        GameCtrl.instance.onPieceMove(this);
+        GameClient.boardcastEvent('on_piece_move', this);
     }
 
-    enterBoard() {
-        Utils.changeParent(this.node, GameCtrl.instance.board.node)
-        this._shadow.active = true;
-        GameCtrl.instance.onPieceIntoBoard(this);
+    plateToBoard() {
+        GameClient.boardcastEvent('on_piece_leave_plate', this);
+        GameClient.boardcastEvent('on_piece_into_board', this);
+        this.showShadow(true);
     }
 
-    enterPlate() {
-        Utils.changeParent(this.node, GameCtrl.instance.plate.node);
-        this._shadow.active = false;
-        GameCtrl.instance.onPieceIntoPlate(this);
+    boardToPlate() {
+        GameClient.boardcastEvent('on_piece_leave_board', this);
+        GameClient.boardcastEvent('on_piece_into_plate', this);
+        this.showShadow(false);
     }
 
     // 被顶替或取消时,回到plate中
     backToPlate(cancel?: boolean) {
-        Utils.changeParent(this.node, GameCtrl.instance.plate.node);
+        GameClient.boardcastEvent('on_piece_leave_board', this);
+        GameClient.boardcastEvent('on_piece_into_plate', this);
+        // 设置位置为离开时的位置
         this.node.setSiblingIndex(this.lastPlateIndex);
-        this._shadow.active = false;
-        if (cancel){
-            GameCtrl.instance.onPieceIntoPlate(this);
-        }
+        this.showShadow(false);
     }
 
     onTouchEnd(touch: cc.Touch) {
         // console.log("piece touch end")
-        if (!this._inBoard) {
+        if (!this.inBoard) {
             this.node.y = 0;
-            let sv = this.node.parent.parent.parent.getComponent(cc.ScrollView);
-            sv.enabled = true;
-            GameCtrl.instance.plate.onPieceDroped(this);
         }
         else {
             this.node.setPosition(this._shadow.getPosition())
-            GameCtrl.instance.onPieceDropBoard();
         }
+
+        // 还原大小
         if (Math.abs(this.node.scaleX) != 1) {
             let action: cc.ActionInterval = cc.scaleBy(0.1, 1 / Math.abs(this.node.scaleX));
             this.node.runAction(action)
         }
-        this._onDrag = false;
+
+        this.onDrag = false;
+        GameClient.boardcastEvent('on_piece_droped', this);
+        this.showShadow(false);
+    }
+
+    createShadow() {
+        this._shadow = cc.instantiate(this.node);
+        this.showShadow(false);
+        this._shadow.getComponent(Piece).enabled = false;
+        this._shadow.setScale(1);
+        this._shadow.parent = this._board;
+        this._shadow.opacity = 155;
+    }
+
+    showShadow(show: boolean) {
+        // console.log(show)
+        if (show) {
+            if (this.node.scaleX < 0 && this._shadow.scaleX !== -1) {
+                this._shadow.scaleX = -1;
+            }
+            if (this.node.scaleY < 0 && this._shadow.scaleY !== -1) {
+                this._shadow.scaleY = -1;
+            }
+            this._shadow.rotation = this.node.rotation;
+            this._shadow.setSiblingIndex(0);
+        }
+        this._shadow.active = show;
     }
 
     updateShadow() {
         let pos = this.getBlockOffset(this.boundBlocks[0]);
-        if (this.node.scaleX < 0 && this._shadow.scaleX !== -1) {
-            this._shadow.scaleX = -1;
-        }
-        if (this.node.scaleY < 0 && this._shadow.scaleY !== -1) {
-            this._shadow.scaleY = -1;
-        }
         // 设置影子位置
         this._shadow.setPosition(this.node.getPosition().add(pos));
     }
@@ -185,28 +197,30 @@ export default class Piece extends cc.Component {
     // 获取方块位移
     private getBlockOffset(child: cc.Node) {
         let pos = child.getPosition()
-        pos.divSelf(this.node.scale);
-        pos = Utils.convertToOtherNodeSpaceAR(pos, this.node, GameCtrl.instance.board.node)
+        pos.x /= this.node.scaleX;
+        pos.y /= this.node.scaleY;
+        pos = Utils.convertToOtherNodeSpaceAR(pos, this.node, this._board)
         // 获取最近的格子坐标
         let target = Grid.getNearestGridPos(pos);
         // 获取向量差
         pos = target.sub(pos);
         for (let i = 1, len = this.boundBlocks.length; i < len; ++i) {
             let bPos = this.boundBlocks[i].getPosition()
-            bPos.divSelf(this.node.scale);
-            bPos = Utils.convertToOtherNodeSpaceAR(bPos, this.node, GameCtrl.instance.board.node);
+            bPos.x /= this.node.scaleX;
+            bPos.y /= this.node.scaleY;
+            bPos = Utils.convertToOtherNodeSpaceAR(bPos, this.node, this._board);
             bPos.addSelf(pos);
             if (bPos.x < 0) {
                 pos.x += 0 - bPos.x + GameDefine.BLOCK_SIZE_PIXEL / 2;
             }
-            if (bPos.x > GameCtrl.instance.board.node.width) {
-                pos.x += GameCtrl.instance.board.node.width - bPos.x - GameDefine.BLOCK_SIZE_PIXEL / 2;
+            if (bPos.x > this._board.width) {
+                pos.x += this._board.width - bPos.x - GameDefine.BLOCK_SIZE_PIXEL / 2;
             }
             if (bPos.y < 0) {
                 pos.y += 0 - bPos.y + GameDefine.BLOCK_SIZE_PIXEL / 2;
             }
-            if (bPos.y > GameCtrl.instance.board.node.height) {
-                pos.y += GameCtrl.instance.board.node.height - bPos.y - GameDefine.BLOCK_SIZE_PIXEL / 2;
+            if (bPos.y > this._board.height) {
+                pos.y += this._board.height - bPos.y - GameDefine.BLOCK_SIZE_PIXEL / 2;
             }
         }
         return pos;
@@ -217,5 +231,39 @@ export default class Piece extends cc.Component {
         if (longPress && !this.onDrag && this._touchTiming !== 0) {
             this.onTouchStart(null);
         }
+    }
+
+    rotate(shun: boolean) {
+        this.node.rotation += shun ? 90 : -90;
+        this.reposition();
+    }
+
+    flip(horizontal: boolean) {
+        // 旋转90或270度,yx轴反转
+        let yx = this.node.rotation % 180 !== 0;
+        if (yx !== horizontal) {
+            this.node.scaleX *= -1;
+        }
+        else {
+            this.node.scaleY *= -1;
+        }
+        this.reposition();
+    }
+
+    reposition() {
+        this.updateShadow();
+        this.node.setPosition(this._shadow.getPosition())
+    }
+
+    getBlockCoords(): Array<cc.Vec2> {
+        let coords: Array<cc.Vec2> = new Array(this.node.childrenCount);
+        // 获取所有格子坐标
+        for (let i = 0, len = this.node.childrenCount; i < len; ++i) {
+            let child = this.node.children[i];
+            let pos = Utils.convertToOtherNodeSpaceAR(child.getPosition(), this.node, this._board);
+            let coord = Grid.getCoord(pos);
+            coords[i] = coord;
+        }
+        return coords;
     }
 }

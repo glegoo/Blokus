@@ -30,7 +30,7 @@ export class Utils {
     }
 
     // 从一个节点坐标切换到另一个
-    static convertToOtherNodeSpaceAR(pos:cc.Vec2, from:cc.Node, to:cc.Node) {        
+    static convertToOtherNodeSpaceAR(pos: cc.Vec2, from: cc.Node, to: cc.Node) {
         // 获取子节点世界坐标
         let result = from.convertToWorldSpaceAR(pos);
         // 转换到board坐标

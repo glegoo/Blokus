@@ -1,57 +1,40 @@
-import Plate from "./Plate";
-import Board from "./Board";
 import Piece from "./Piece";
-import UIGame from "./UIGame";
 
 const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class GameCtrl extends cc.Component {
 
-    // @property(cc.Label)
-    // label: cc.Label = null;
-
-    board: Board = null;
-    plate: Plate = null;
-    ui: UIGame = null;
-    curPiece: Piece = null;
-
-    private static _inst: GameCtrl = null;
-
-    static get instance() {
+    private static _inst: GameCtrl;
+    static get instance(): GameCtrl {
         return GameCtrl._inst;
     }
 
+    // @property(cc.Label)
+    // label: cc.Label = null;
+
+    seat: number = 0;
+    firstStep: boolean = false;
+
     onLoad() {
         GameCtrl._inst = this;
-        this.plate = cc.find('Canvas/scrollview/view/content').getComponent(Plate);
-        this.board = cc.find('Canvas/board').getComponent(Board);
-        this.ui = this.node.getComponent(UIGame);
     }
 
     start() {
-
+        this.initEventHandlers();
+        this.gameStart();
     }
 
-    onPieceIntoBoard(piece: Piece) {
-        this.plate.clearDragPiece(piece);
-        this.board.onPieceIn(piece);
+    initEventHandlers() {
+        let self = this;
+        this.node.on('on_set_piece', function (data) {
+            self.firstStep = false;
+        })
     }
 
-    onPieceIntoPlate(piece: Piece) {
-        if (piece.onDrag) {
-            this.plate.onPiecePicked(piece);
-        }
-        this.board.onPieceLeave();
+    gameStart() {
+        this.firstStep = true;
     }
 
-    onPieceMove(piece: Piece) {
-        this.plate.onPieceMove(piece);
-        this.ui.showPieceCtrl(false);
-    }
-
-    onPieceDropBoard() {
-        this.ui.showPieceCtrl(true, false);
-    }
     // update (dt) {}
 }
