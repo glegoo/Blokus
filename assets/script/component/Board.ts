@@ -131,7 +131,7 @@ export default class Board extends cc.Component {
                 let coord = coords[i];
                 this._grid.setBlock(coord.x, coord.y, seat);
             }
-            GameClient.boardcastEvent('on_set_piece', this._curPiece)
+            GameClient.instance.boardcastEvent('on_set_piece', this._curPiece)
             this._curPiece = null;
         }
     }

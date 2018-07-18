@@ -1,3 +1,5 @@
+import { GameClient } from "./GameClient";
+
 cc.Class({
     extends: cc.Component,
     properties: {
@@ -17,7 +19,7 @@ cc.Class({
     },
 
     guestAuth: function () {
-        var account = cc.args["account"];
+        var account = GameClient.instance.urlArgs["account"];
         if (account == null) {
             account = cc.sys.localStorage.getItem("account");
         }
@@ -38,7 +40,7 @@ cc.Class({
         else {
             self.account = ret.account;
             self.sign = ret.sign;
-            GameClient.instance.http.url = "http://" + GameClient.instance.SI.hall;
+            GameClient.instance.http.url = "http://" + GameClient.instance.serverInfo.hall;
             self.login();
         }
     },
@@ -73,7 +75,7 @@ cc.Class({
                 }
             }
         };
-        GameClient.instance.wc.show("正在登录游戏");
+        GameClient.instance.toast("Connecting...");
         GameClient.instance.http.sendRequest("/login", { account: this.account, sign: this.sign }, onLogin);
     },
 
@@ -126,7 +128,7 @@ cc.Class({
             sign: GameClient.instance.userMgr.sign,
             roomid: roomId
         };
-        GameClient.instance.wc.show("正在进入房间 " + roomId);
+        GameClient.instance.toast("正在进入房间 " + roomId);
         GameClient.instance.http.sendRequest("/enter_private_room", data, onEnter);
     },
     getHistoryList: function (callback) {

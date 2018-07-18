@@ -98,7 +98,7 @@ export default class Piece extends cc.Component {
             this.showShadow(true);
         }
         this.onDrag = true;
-        GameClient.boardcastEvent('on_piece_picked', this);
+        GameClient.instance.boardcastEvent('on_piece_picked', this);
     }
 
     onMove(touch: cc.Touch) {
@@ -120,25 +120,25 @@ export default class Piece extends cc.Component {
                 this.boardToPlate();
             }
         }
-        GameClient.boardcastEvent('on_piece_move', this);
+        GameClient.instance.boardcastEvent('on_piece_move', this);
     }
 
     plateToBoard() {
-        GameClient.boardcastEvent('on_piece_leave_plate', this);
-        GameClient.boardcastEvent('on_piece_into_board', this);
+        GameClient.instance.boardcastEvent('on_piece_leave_plate', this);
+        GameClient.instance.boardcastEvent('on_piece_into_board', this);
         this.showShadow(true);
     }
 
     boardToPlate() {
-        GameClient.boardcastEvent('on_piece_leave_board', this);
-        GameClient.boardcastEvent('on_piece_into_plate', this);
+        GameClient.instance.boardcastEvent('on_piece_leave_board', this);
+        GameClient.instance.boardcastEvent('on_piece_into_plate', this);
         this.showShadow(false);
     }
 
     // 被顶替或取消时,回到plate中
     backToPlate(cancel?: boolean) {
-        GameClient.boardcastEvent('on_piece_leave_board', this);
-        GameClient.boardcastEvent('on_piece_into_plate', this);
+        GameClient.instance.boardcastEvent('on_piece_leave_board', this);
+        GameClient.instance.boardcastEvent('on_piece_into_plate', this);
         // 设置位置为离开时的位置
         this.node.setSiblingIndex(this.lastPlateIndex);
         this.showShadow(false);
@@ -160,7 +160,7 @@ export default class Piece extends cc.Component {
         }
 
         this.onDrag = false;
-        GameClient.boardcastEvent('on_piece_droped', this);
+        GameClient.instance.boardcastEvent('on_piece_droped', this);
         this.showShadow(false);
     }
 

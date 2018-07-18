@@ -15,10 +15,14 @@ export class GameClient {
 
     // 浏览器参数
     public urlArgs = null;
+    public serverInfo = null;
+
     public userMgr = null;
     public audioMgr = null;
     public http = null;
     public net = null;
+
+    public labToast: cc.Label = null;
 
     // 浏览器参数解析
     urlParse() {
@@ -40,7 +44,7 @@ export class GameClient {
                 params[name] = value;
             }
         }
-        this.urlArgs;
+        this.urlArgs = params;
     }
 
     initMgr() {
@@ -60,11 +64,18 @@ export class GameClient {
     startPreloading(callback) {
         cc.loader.loadResDir("textures", function (err, assets) {
             callback();
-        });  
+        });
     }
 
     // 广播消息
-    static boardcastEvent(name: string, data: any) {
+    boardcastEvent(name: string, data: any) {
         cc.find('Canvas').emit(name, data);
+    }
+
+    // 文字提示
+    toast(text: string) {
+        if (this.labToast) {
+            this.labToast.string = text;
+        }
     }
 }

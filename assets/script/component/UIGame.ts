@@ -48,6 +48,6 @@ export default class UIGame extends cc.Component {
 
     onPieceControllBtnClicked(event) {
         let name = event.target.name;
-        GameClient.boardcastEvent('piece_ctrl_clicked', name)
+        GameClient.instance.boardcastEvent('piece_ctrl_clicked', name)
     }
 }

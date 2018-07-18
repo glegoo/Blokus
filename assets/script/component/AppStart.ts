@@ -23,6 +23,7 @@ export default class AppStart extends cc.Component {
         this.showSplash(function () {
             this.getServerInfo();
         });
+        GameClient.instance.labToast = this.loadingProgess;
     }
 
     showSplash(callback) {
@@ -45,9 +46,10 @@ export default class AppStart extends cc.Component {
                 console.log("error.");
             }
             else {
-                self.loadingProgess.string = "Loading..."
+                GameClient.instance.serverInfo = ret;
+                GameClient.instance.toast("Loading...")
                 GameClient.instance.startPreloading(function () {
-                    self.loadingProgess.string = "Start Login"
+                    GameClient.instance.toast("Start Login")
                     GameClient.instance.userMgr.guestAuth();
                 })
             }
@@ -56,7 +58,7 @@ export default class AppStart extends cc.Component {
         let xhr = null;
         let complete = false;
         let fnRequest = function () {
-            self.loadingProgess.string = "Connenting...";
+            GameClient.instance.toast("Connenting...")
             xhr = GameClient.instance.http.sendRequest("/get_serverinfo", null, function (ret) {
                 xhr = null;
                 complete = true;
@@ -69,7 +71,7 @@ export default class AppStart extends cc.Component {
             if (!complete) {
                 if (xhr) {
                     xhr.abort();
-                    self.loadingProgess.string = "连接失败，即将重试";
+                    GameClient.instance.toast("Connection Faild, Retry")
                     setTimeout(function () {
                         fnRequest();
                     }, 5000);
