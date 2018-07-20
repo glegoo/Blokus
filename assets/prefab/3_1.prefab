@@ -60,7 +60,7 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 220.00000000448148,
+      "x": 132,
       "y": 0
     },
     "_skewX": 0,
@@ -396,6 +396,7 @@
       "__id__": 1
     },
     "_enabled": true,
+    "index": 2,
     "boundBlocks": [
       {
         "__id__": 2

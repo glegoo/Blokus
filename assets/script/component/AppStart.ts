@@ -28,7 +28,7 @@ export default class AppStart extends cc.Component {
 
     showSplash(callback) {
         let self = this;
-        let SHOW_TIME = 3000;
+        let SHOW_TIME = 1500;
         let FADE_TIME = 0.5;
         this._splash = cc.find("Canvas/splash");
         this._splash.active = true;

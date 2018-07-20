@@ -54,7 +54,7 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 44,
+      "x": 2904,
       "y": 0
     },
     "_skewX": 0,
@@ -178,6 +178,7 @@
       "__id__": 1
     },
     "_enabled": true,
+    "index": 0,
     "boundBlocks": [
       {
         "__id__": 2

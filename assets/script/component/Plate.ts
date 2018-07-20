@@ -4,11 +4,13 @@ import { Utils } from "../Utils";
 const { ccclass, property, executeInEditMode } = cc._decorator;
 
 @ccclass
-@executeInEditMode
 export default class Plate extends cc.Component {
 
-    @property
+    @property({tooltip:'间距'})
     spacingX: number = 0;
+
+    @property([cc.Prefab])
+    piecePrefabs: Array<cc.Prefab> = new Array();
 
     private _dragIndex: number = -1;
     private _dragPiece: Piece = null;
@@ -22,6 +24,17 @@ export default class Plate extends cc.Component {
 
     start() {
         this.initEventHandlers();
+        this.createAll(cc.Color.WHITE);
+    }
+
+    createAll(color: cc.Color) {
+        let plate = this._plate;
+        this.piecePrefabs.forEach((pre, index) => {
+            let piece = cc.instantiate(pre)
+            piece.getComponent(Piece).color = color
+            piece.getComponent(Piece).index = index
+            plate.addChild(piece)
+        })
     }
 
     initEventHandlers() {
@@ -154,6 +167,6 @@ export default class Plate extends cc.Component {
             }
             x += child.width / 2 * Math.abs(child.scaleX) + this.spacingX;
         }
-        this._plate.width = x - this.spacingX + 10;
+        this._plate.width = (x - this.spacingX + 10) * this._plate.scaleX;
     }
 }

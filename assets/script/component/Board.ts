@@ -113,12 +113,15 @@ export default class Board extends cc.Component {
             for (let i = 0, len = coords.length; i < len; ++i) {
                 let result = this._grid.blockCheck(coords[i], GameCtrl.instance.seat);
                 if (result == BlockCheckResult.NotEmpty || result == BlockCheckResult.Edge) {
+                    console.log("false")
                     return false;
                 }
                 else if (result == BlockCheckResult.Conner) {
                     jiao = true;
+                    console.log("true")
                 }
             }
+            console.log(jiao)
             return jiao;
         }
     }
@@ -131,6 +134,7 @@ export default class Board extends cc.Component {
                 let coord = coords[i];
                 this._grid.setBlock(coord.x, coord.y, seat);
             }
+            this._curPiece.getComponent(Piece).moveable = false
             GameClient.instance.boardcastEvent('on_set_piece', this._curPiece)
             this._curPiece = null;
         }

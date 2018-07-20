@@ -9,14 +9,19 @@ const { ccclass, property } = cc._decorator;
 export default class Piece extends cc.Component {
 
     // 边界方块
-    @property([cc.Node])
+    @property({
+        type: [cc.Node],
+        tooltip: '边界方块'
+    })
     boundBlocks: cc.Node[] = [];
 
     // 离开plate时的位置
     lastPlateIndex: number = 0;
     onDrag: boolean = false;
+    moveable: boolean = false;
+    // 数组中的下标, 代替ID
+    index: number = 0;
 
-    private _moveable: boolean = false;
     private _shadow: cc.Node = null;
     private _touchTiming: number = 0;
     private _board: cc.Node = null;
@@ -31,8 +36,15 @@ export default class Piece extends cc.Component {
     }
 
     start() {
-        this._moveable = true;
+        this.moveable = true;
         this.initDragStuffs();
+    }
+
+    // 设置颜色
+    set color(color: cc.Color) {
+        this.node.children.forEach(node => {
+            node.color = color
+        })
     }
 
     initDragStuffs() {
@@ -40,7 +52,7 @@ export default class Piece extends cc.Component {
         //break if it's not my turn.
         this.node.on(cc.Node.EventType.TOUCH_START, function (touch: cc.Touch) {
             // console.log("cc.Node.EventType.TOUCH_START", self.name, self.node.getContentSize());
-            if (self._moveable) {
+            if (self.moveable) {
                 // 棋盘中直接可以移动
                 if (self.inBoard) {
                     self.onTouchStart(touch);
@@ -53,7 +65,7 @@ export default class Piece extends cc.Component {
 
         this.node.on(cc.Node.EventType.TOUCH_MOVE, function (touch: cc.Touch) {
             // console.log("cc.Node.EventType.TOUCH_MOVE", self.name, self.node.getContentSize());
-            if (self._moveable) {
+            if (self.moveable) {
                 if (!self.onDrag) {
                     // 托盘中只有向上移动才能拖走, 保证可以左右滑动
                     if (touch.getDelta().y > 5) {
@@ -68,7 +80,7 @@ export default class Piece extends cc.Component {
 
         this.node.on(cc.Node.EventType.TOUCH_END, function (touch: cc.Touch) {
             // console.log("cc.Node.EventType.TOUCH_END", self.name, self.node.getContentSize());
-            if (self._moveable) {
+            if (self.moveable) {
                 if (self.onDrag) {
                     self.onTouchEnd(touch);
                 }
@@ -78,7 +90,7 @@ export default class Piece extends cc.Component {
 
         this.node.on(cc.Node.EventType.TOUCH_CANCEL, function (touch: cc.Touch) {
             // console.log("cc.Node.EventType.MOUSE_LEAVE", self.name, self.node.getContentSize());
-            if (self._moveable) {
+            if (self.moveable) {
                 if (self.onDrag) {
                     self.onTouchEnd(touch);
                 }
@@ -168,7 +180,7 @@ export default class Piece extends cc.Component {
         this._shadow = cc.instantiate(this.node);
         this.showShadow(false);
         this._shadow.getComponent(Piece).enabled = false;
-        this._shadow.setScale(1);
+        this._shadow.setScale(cc.v2(this.node.scaleX, this.node.scaleY));
         this._shadow.parent = this._board;
         this._shadow.opacity = 155;
     }
@@ -176,11 +188,11 @@ export default class Piece extends cc.Component {
     showShadow(show: boolean) {
         // console.log(show)
         if (show) {
-            if (this.node.scaleX < 0 && this._shadow.scaleX !== -1) {
-                this._shadow.scaleX = -1;
+            if (this.node.scaleX * this._shadow.scaleX < 0) {
+                this._shadow.scaleX = this.node.scaleX / Math.abs(this.node.scaleX);
             }
-            if (this.node.scaleY < 0 && this._shadow.scaleY !== -1) {
-                this._shadow.scaleY = -1;
+            if (this.node.scaleY * this._shadow.scaleY < 0) {
+                this._shadow.scaleY = this.node.scaleY / Math.abs(this.node.scaleY);
             }
             this._shadow.rotation = this.node.rotation;
             this._shadow.setSiblingIndex(0);
@@ -197,8 +209,8 @@ export default class Piece extends cc.Component {
     // 获取方块位移
     private getBlockOffset(child: cc.Node) {
         let pos = child.getPosition()
-        pos.x /= this.node.scaleX;
-        pos.y /= this.node.scaleY;
+        pos.x /= Math.abs(this.node.scaleX);
+        pos.y /= Math.abs(this.node.scaleY);
         pos = Utils.convertToOtherNodeSpaceAR(pos, this.node, this._board)
         // 获取最近的格子坐标
         let target = Grid.getNearestGridPos(pos);
@@ -206,8 +218,8 @@ export default class Piece extends cc.Component {
         pos = target.sub(pos);
         for (let i = 1, len = this.boundBlocks.length; i < len; ++i) {
             let bPos = this.boundBlocks[i].getPosition()
-            bPos.x /= this.node.scaleX;
-            bPos.y /= this.node.scaleY;
+            bPos.x /= Math.abs(this.node.scaleX);
+            bPos.y /= Math.abs(this.node.scaleY);
             bPos = Utils.convertToOtherNodeSpaceAR(bPos, this.node, this._board);
             bPos.addSelf(pos);
             if (bPos.x < 0) {
@@ -260,7 +272,10 @@ export default class Piece extends cc.Component {
         // 获取所有格子坐标
         for (let i = 0, len = this.node.childrenCount; i < len; ++i) {
             let child = this.node.children[i];
-            let pos = Utils.convertToOtherNodeSpaceAR(child.getPosition(), this.node, this._board);
+            let pos = child.getPosition()
+            pos.x /= Math.abs(this.node.scaleX);
+            pos.y /= Math.abs(this.node.scaleY);
+            pos = Utils.convertToOtherNodeSpaceAR(pos, this.node, this._board);
             let coord = Grid.getCoord(pos);
             coords[i] = coord;
         }

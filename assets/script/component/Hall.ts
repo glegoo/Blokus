@@ -36,7 +36,29 @@ export default class Hall extends cc.Component {
     }
 
     onCreateRoomClicked() {
-        console.log("onCreateRoomClicked");
+
+        var onCreate = function (ret) {
+            if (ret.errcode !== 0) {
+                cc.vv.wc.hide();
+                //console.log(ret.errmsg);
+                if (ret.errcode == 2222) {
+                    cc.vv.alert.show("提示", "钻石不足，创建房间失败!");
+                }
+                else {
+                    cc.vv.alert.show("提示", "创建房间失败,错误码:" + ret.errcode);
+                }
+            }
+            else {
+                GameClient.instance.gameNetMgr.connectGameServer(ret);
+            }
+        };
+
+        var data = {
+            account: GameClient.instance.userMgr.account,
+            sign: GameClient.instance.userMgr.sign,
+        };
+        console.log(data);
+        GameClient.instance.http.sendRequest("/create_private_room", data, onCreate);
     }
 
     onJoinRoom() {
